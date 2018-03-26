@@ -1,10 +1,11 @@
 
 /*
- * Program to perform Fast Fourier Transform (DFT) using Radix 2 DITFFT Algorithm
+ * Program to perform Linear Filtering of long data sequence using the Overlap Add Method (OAM)
  *
  * Author: Srijal Poojari
  * Contact: srijal97@gmail.com
- * Description: Provides functions to calculate FFT of any signal of length N (radix 2)
+ * Description: Provides functions to calculate the linear convolution of 
+ *              a long data sequence, of length N, using OAM.
  *
  */
 
@@ -54,25 +55,35 @@ struct complex_number sub_complex(struct complex_number a, struct complex_number
 //----------------------------------------------------------------------------------//
 
 int radix2_greater_than_equal_to(int n){
+	// Calculates and returns a radix 2 number greater than or equal to n.
+
     int result = 1;
 
     while( result < n) {
-        result = result << 1;
+        result = result << 1;  // Shift bits (increase power of 2) till desired number is achieved.
     }
 
     return result;
 }
 
 void fft(int N, struct complex_number a[], struct complex_number A[]) {
+	// Calculate Fast Fourier Transform of signal a[] of length N. Result is A[].
 
     int k, n;
 
-    if (N == 2){
+    if (N == 2){  // FFT flowchart (butterfly diagram) for 2 point signal.
         A[0] = add_complex(a[0], a[1]);
         A[1] = sub_complex(a[0], a[1]);
         return;
     }
-    else {
+    else {  // If N > 2, divide into further parts and first find its FFT. Uses recursion.
+
+	    // X[k] =  G[k]   +  W^(k) * H[k] //
+		// N pt   N/2 pt           N/2 pt //
+		// ------------------------------ //
+		// where, G[k] = DFT[x(2*n)]      //
+		//        H[k] = DFT[x(2*n + 1)]  //
+
         struct complex_number h[N/2];
         struct complex_number H[N/2];
 
@@ -98,27 +109,23 @@ void fft(int N, struct complex_number a[], struct complex_number A[]) {
 void ifft(int N, struct complex_number A[], struct complex_number a[]) {
 
     // x[n] = (1/N) * FFT(X*[k])*
-
     int i;
 
 	struct complex_number A_conj[N];  // Conjugate of A[k]
 	struct complex_number a_conj[N];  // Conjugate of a[n]
 
-	for(i = 0; i < N; i++) {
+	for(i = 0; i < N; i++) {  // Calculate conjugate
         A_conj[i].real = A[i].real;
         A_conj[i].imag = -1 * A[i].imag;
 	}
 
-	fft(N, A_conj, a_conj);
+	fft(N, A_conj, a_conj);  // find FFT of conjugate sequence
 
-	for(i = 0; i < N; i++) {
+	for(i = 0; i < N; i++) {  // Again find conjugate and divide term by N.
         a[i].real = a_conj[i].real / N;
         a[i].imag = -1 * a_conj[i].imag / N;
 	}
-
-	return;
 }
-
 
 void fast_circular_convolve(int N, struct complex_number x[], struct complex_number h[], struct complex_number y[]) {
     // Find circular convolution of 2 signals of length N. Result will be of length N.
@@ -147,6 +154,10 @@ void fast_circular_convolve(int N, struct complex_number x[], struct complex_num
             h_new[i].imag = 0;
         }
     }
+	
+	// We know, 
+	// circular_convolution(x(n), h(n)) ===> IFFT( X[k] * H[K] )
+	// where, X[k] = FFT[x(n)], H[k] = FFT[h(n)]
 
     struct complex_number X[N_rad2];
     struct complex_number H[N_rad2];
@@ -161,7 +172,7 @@ void fast_circular_convolve(int N, struct complex_number x[], struct complex_num
 
     ifft(N_rad2, Y, y_new);
 
-    for(i = 0; i < N; i++) {  // copy result to y[n]
+    for(i = 0; i < N; i++) {  // copy result of length N to y[n]
         y[i].real = y_new[i].real;
         y[i].imag = y_new[i].imag;
     }
@@ -176,9 +187,13 @@ void fast_linear_convolve(int len_x, int len_h, struct complex_number x[], struc
 
     struct complex_number x_new[N];
     struct complex_number h_new[N];
-    struct complex_number y_new[N];
 
     int i;
+	
+	// linear_convolution == circular_convolution, when N is same.
+	
+	// Therefore, to perform linear_convolution, we find circular_convolution
+	// of the 2 signals by zero padding both signals to length N.
 
     for(i = 0; i < N; i++) {  // Zero padding
         if(i < len_x) {
@@ -200,12 +215,7 @@ void fast_linear_convolve(int len_x, int len_h, struct complex_number x[], struc
         }
     }
 
-    fast_circular_convolve(N, x_new, h_new, y_new);
-
-    for(i = 0; i < N; i++) {  // copy result to y[n]
-        y[i].real = y_new[i].real;
-        y[i].imag = y_new[i].imag;
-    }
+    fast_circular_convolve(N, x_new, h_new, y);
 
     return;
 }
@@ -215,11 +225,16 @@ void fast_linear_convolve(int len_x, int len_h, struct complex_number x[], struc
 int main()
 {
 
-	int i, j;
+	int i, j, selector;
 	int signal_length, M, N, L;
+	
+	// signal_length = length(x(n))
+	//             M = length(h(n))
+	//             L = length(decomposed x(n))
+	//             N = L + M - 1; or length(decomposed y(n))
 
 	printf( "Is x[n] a real valued signal? (1: Yes, 0: No): ");
-	scanf("%d", &i);
+	scanf("%d", &selector);
 
 	printf( "Length of x[n] = ");
 	scanf("%d", &signal_length);
@@ -228,7 +243,7 @@ int main()
 
 	printf( "Enter the values of x[n] : \n");
 
-	if (i == 1){
+	if (selector == 1){  // If yes (real valued), accept only real values for ease of use.
         for(i = 0; i < signal_length; i++) {
 		    scanf("%lf", &x[i].real);
 		    x[i].imag = 0;
@@ -245,7 +260,7 @@ int main()
 	}
 
 	printf( "Is h[n] a real valued signal? (1: Yes, 0: No): ");
-	scanf("%d", &i);
+	scanf("%d", &selector);
 
 	printf( "Length of h[n] = ");
 	scanf("%d", &M);
@@ -254,7 +269,7 @@ int main()
 
 	printf( "Enter the values of h[n] : \n");
 
-	if (i == 1){
+	if (selector == 1){  // If yes (real valued), accept only real values for ease of use.
         for(i = 0; i < M; i++) {
 		    scanf("%lf", &h[i].real);
 		    h[i].imag = 0;
@@ -269,43 +284,49 @@ int main()
 		    scanf("%lf", &h[i].imag);
     	}
 	}
+	
+	// Now to find value of N (radix 2) such that L < M in the relation N = L + M - 1
 
     N = 1; // Initial Assumption
     do {
-        N = N << 1; // get radix-2 value of N
+        N = N << 1;    // get radix-2 value of N
         L = N - M + 1; // Length of decomposed x[n]
-    } while( L < 2);
-
-	int num_of_decompositions = (signal_length / L) + 1;
+    } while( L < M );
+	
+	int num_of_decompositions = (signal_length / L) + 1;  // Number of decompositions required
 
 	printf("Number of decompositions: %d \n", num_of_decompositions);
 
-	int result_length = num_of_decompositions*L + M - 1;
+	int result_length = num_of_decompositions * L + M - 1;
 
 	struct complex_number y[result_length];
 
-	for(i = 0; i < result_length; i++){
+	for(i = 0; i < result_length; i++){  // Intially, result is all 0
         y[i].real = 0;
         y[i].imag = 0;
 	}
+	
+	//--------------- Perform OAM ------------------//
 
 	for(i = 0; i < num_of_decompositions; i++){
 	    struct complex_number x_decom[L];  // decomposed x[n]
         struct complex_number y_decom[L+M-1];  // decomposed y[n]
 
-        for(j = 0; j < L; j++) {
+        for(j = 0; j < L; j++) {  // Copy 'L' signal values from x[n] to x_decom[n]
             if ((L*i + j) < signal_length) {
-                x_decom[j] = x[L*i + j];
+                x_decom[j] = x[L*i + j]; 
             }
             else {
                 x_decom[j].real = 0;
                 x_decom[j].imag = 0;
             }
         }
+		
+		// Calculate y_decom[], length(y_decom[]) = L + M - 1
 
         fast_linear_convolve(L, M, x_decom, h, y_decom);
 
-        for(j = 0; j < (L + M - 1); j++) {
+        for(j = 0; j < (L + M - 1); j++) {  // Overlap and add y_decom to y.  
             y[i*L + j] = add_complex(y[i*L + j], y_decom[j]);
         }
 	}
