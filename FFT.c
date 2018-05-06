@@ -54,7 +54,7 @@ struct complex_number sub_complex(struct complex_number a, struct complex_number
 //----------------------------------------------------------------------------------//
 
 int radix2_greater_than_equal_to(int n){
-	// Calculates and returns a radix 2 number greater than or equal to n.
+    // Calculates and returns a radix 2 number greater than or equal to n.
 
     int result = 1;
 
@@ -66,7 +66,7 @@ int radix2_greater_than_equal_to(int n){
 }
 
 void fft(int N, struct complex_number a[], struct complex_number A[]) {
-	// Calculate Fast Fourier Transform of signal a[] of length N. Result is A[].
+    // Calculate Fast Fourier Transform of signal a[] of length N. Result is A[].
 
     int k, n;
 
@@ -77,11 +77,11 @@ void fft(int N, struct complex_number a[], struct complex_number A[]) {
     }
     else {  // If N > 2, divide into further parts and first find its FFT. Uses recursion.
 
-	    // X[k] =  G[k]   +  W^(k) * H[k] //
-		// N pt   N/2 pt           N/2 pt //
-		// ------------------------------ //
-		// where, G[k] = DFT[x(2*n)]      //
-		//        H[k] = DFT[x(2*n + 1)]  //
+        // X[k] =  G[k]   +  W^(k) * H[k] //
+        // N pt   N/2 pt           N/2 pt //
+        // ------------------------------ //
+        // where, G[k] = DFT[x(2*n)]      //
+        //        H[k] = DFT[x(2*n + 1)]  //
 
         struct complex_number h[N/2];
         struct complex_number H[N/2];
@@ -110,20 +110,20 @@ void ifft(int N, struct complex_number A[], struct complex_number a[]) {
     // x[n] = (1/N) * FFT(X*[k])*
     int i;
 
-	struct complex_number A_conj[N];  // Conjugate of A[k]
-	struct complex_number a_conj[N];  // Conjugate of a[n]
+    struct complex_number A_conj[N];  // Conjugate of A[k]
+    struct complex_number a_conj[N];  // Conjugate of a[n]
 
-	for(i = 0; i < N; i++) {  // Calculate conjugate
+    for(i = 0; i < N; i++) {  // Calculate conjugate
         A_conj[i].real = A[i].real;
         A_conj[i].imag = -1 * A[i].imag;
-	}
+    }
 
-	fft(N, A_conj, a_conj);  // find FFT of conjugate sequence
+    fft(N, A_conj, a_conj);  // find FFT of conjugate sequence
 
-	for(i = 0; i < N; i++) {  // Again find conjugate and divide term by N.
+    for(i = 0; i < N; i++) {  // Again find conjugate and divide term by N.
         a[i].real = a_conj[i].real / N;
         a[i].imag = -1 * a_conj[i].imag / N;
-	}
+    }
 }
 
 //----------------------------------------------------------------------------------//
@@ -131,65 +131,65 @@ void ifft(int N, struct complex_number A[], struct complex_number a[]) {
 int main()
 {
 
-	int selector, N;
+    int selector, N;
 
-	printf( "Is x[n] a real valued signal? (1: Yes, 0: No): ");
-	scanf("%d", &selector);
+    printf( "Is x[n] a real valued signal? (1: Yes, 0: No): ");
+    scanf("%d", &selector);
 
-	printf( "Enter the length of x[n] i.e. N = ");
-	scanf("%d", &N);
+    printf( "Enter the length of x[n] i.e. N = ");
+    scanf("%d", &N);
 
-	// Convert N to radix 2 number for radix 2 FFT Algorithm.
-	int N_rad2 = radix2_greater_than_equal_to(N);
+    // Convert N to radix 2 number for radix 2 FFT Algorithm.
+    int N_rad2 = radix2_greater_than_equal_to(N);
 
-	struct complex_number x[N_rad2];
-	struct complex_number X[N_rad2];
+    struct complex_number x[N_rad2];
+    struct complex_number X[N_rad2];
 
-	int i;
+    int i;
 
-	for (i = 0; i < N_rad2; i++){
-	    // Initialize with zeros as we accept only N (not N_rad2) inputs from the user.
-		x[i].real = 0;
-		x[i].imag = 0;
-	}
+    for (i = 0; i < N_rad2; i++){
+        // Initialize with zeros as we accept only N (not N_rad2) inputs from the user.
+        x[i].real = 0;
+        x[i].imag = 0;
+    }
 
-	printf( "Enter the values of x[n] : \n");
+    printf( "Enter the values of x[n] : \n");
 
-	if (selector == 1){ // If yes (real valued), accept only real values for ease of use.
+    if (selector == 1){ // If yes (real valued), accept only real values for ease of use.
         for(i = 0; i < N; i++) {
-		    scanf("%lf", &x[i].real);
-		    x[i].imag = 0;
-    	}
-	}
-	else{
+            scanf("%lf", &x[i].real);
+            x[i].imag = 0;
+        }
+    }
+    else{
         for(i = 0; i < N; i++) {
             printf("Real: ");
-		    scanf("%lf", &x[i].real);
+            scanf("%lf", &x[i].real);
 
-		    printf("Imaginary: ");
-		    scanf("%lf", &x[i].imag);
-    	}
-	}
+            printf("Imaginary: ");
+            scanf("%lf", &x[i].imag);
+        }
+    }
 
-	//----------------FFT-------------------//
+    //----------------FFT-------------------//
 
-	fft(N_rad2, x, X);
+    fft(N_rad2, x, X);
 
-	printf("FFT result, X[k]: \n");
-	for(i = 0; i < N_rad2; i++) {
+    printf("FFT result, X[k]: \n");
+    for(i = 0; i < N_rad2; i++) {
         printf("X[%d] = %lf + j%lf \n", i, X[i].real, X[i].imag);
-	}
+    }
 
-	//---------------IFFT-------------------//
+    //---------------IFFT-------------------//
 
-	ifft(N_rad2, X, x);
+    ifft(N_rad2, X, x);
 
-	printf("IFFT result, x[n]: \n");
-	for(i = 0; i < N_rad2; i++) {
+    printf("IFFT result, x[n]: \n");
+    for(i = 0; i < N_rad2; i++) {
         printf("x[%d] = %lf + j%lf \n", i, x[i].real, x[i].imag);
-	}
+    }
 
-	return 0;
+    return 0;
 
 }
 

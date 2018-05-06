@@ -51,8 +51,8 @@ void dft(int N, struct complex_number x[], struct complex_number X[]) {
 
     int k, n;
 
-	// DFT[x(n)] = X(k) = x(0)*W^(0) + x(0)*W^(k) + ... + x(N-1)*W^(N*k - k)
-	// where, W^(n*k) is the twiddle factor.
+    // DFT[x(n)] = X(k) = x(0)*W^(0) + x(0)*W^(k) + ... + x(N-1)*W^(N*k - k)
+    // where, W^(n*k) is the twiddle factor.
 
     for(k = 0; k < N; k++) {
         struct complex_number summation;
@@ -60,7 +60,7 @@ void dft(int N, struct complex_number x[], struct complex_number X[]) {
         summation.imag = 0;
 
         for(n = 0; n < N; n++) {
-			// calculate every term in summation
+            // calculate every term in summation
             struct complex_number term = multiply_complex(x[n], twiddle_factor(N, n*k));
             summation = add_complex(summation, term);
         }
@@ -75,8 +75,8 @@ void idft(int N, struct complex_number X[], struct complex_number x[]) {
 
     int n, k;
 
-	// IDFT[X(k)] = x(n) = ( X(0)*W^(0) + X(0)*W^(-k) + ... + X(N-1)*W^(-N*k + k) ) / N
-	// where, W^(n*k) is the twiddle factor.
+    // IDFT[X(k)] = x(n) = ( X(0)*W^(0) + X(0)*W^(-k) + ... + X(N-1)*W^(-N*k + k) ) / N
+    // where, W^(n*k) is the twiddle factor.
 
     for(n = 0; n < N; n++) {
         struct complex_number summation;
@@ -84,7 +84,7 @@ void idft(int N, struct complex_number X[], struct complex_number x[]) {
         summation.imag = 0;
 
         for(k = 0; k < N; k++) {
-			// calculate every term in summation
+            // calculate every term in summation
             struct complex_number term = multiply_complex(X[k], twiddle_factor(N, -n*k));
             summation = add_complex(summation, term);
         }
@@ -102,58 +102,58 @@ void idft(int N, struct complex_number X[], struct complex_number x[]) {
 int main()
 {
 
-	int selector, N;
+    int selector, N;
 
-	printf( "Is x[n] a real valued signal? (1: Yes, 0: No): ");
-	scanf("%d", &selector);
+    printf( "Is x[n] a real valued signal? (1: Yes, 0: No): ");
+    scanf("%d", &selector);
 
-	printf( "Enter the length of x[n] i.e. N = ");
-	scanf("%d", &N);
+    printf( "Enter the length of x[n] i.e. N = ");
+    scanf("%d", &N);
 
-	struct complex_number x[N];
-	struct complex_number X[N];
+    struct complex_number x[N];
+    struct complex_number X[N];
 
-	printf( "Enter the values of x[n] : \n");
+    printf( "Enter the values of x[n] : \n");
 
-	int i;
+    int i;
 
-	if (selector == 1){  // If yes (real valued), accept only real values for ease of use.
+    if (selector == 1){  // If yes (real valued), accept only real values for ease of use.
         for(i = 0; i < N; i++) {
-		    scanf("%lf", &x[i].real);
-		    x[i].imag = 0;
-    	}
-	}
-	else{
+            scanf("%lf", &x[i].real);
+            x[i].imag = 0;
+        }
+    }
+    else{
         for(i = 0; i < N; i++) {
             printf("Real: ");
-		    scanf("%lf", &x[i].real);
+            scanf("%lf", &x[i].real);
 
-		    printf("Imaginary: ");
-		    scanf("%lf", &x[i].imag);
-    	}
-	}
+            printf("Imaginary: ");
+            scanf("%lf", &x[i].imag);
+        }
+    }
 
-	//------------------- DFT ---------------------//
+    //------------------- DFT ---------------------//
 
-	dft(N, x, X);
+    dft(N, x, X);
 
-	printf("DFT result, X[k]: \n");
-	for(i = 0; i < N; i++) {
+    printf("DFT result, X[k]: \n");
+    for(i = 0; i < N; i++) {
         printf("X[%d] = %lf + j%lf \n", i, X[i].real, X[i].imag);
 
-	}
+    }
 
-	//------------------- IDFT --------------------//
+    //------------------- IDFT --------------------//
 
-	idft(N, X, x);
+    idft(N, X, x);
 
-	printf("Inverse DFT result, x[n]: \n");
-	for(i = 0; i < N; i++) {
+    printf("Inverse DFT result, x[n]: \n");
+    for(i = 0; i < N; i++) {
         printf("x[%d] = %lf + j%lf \n", i, x[i].real, x[i].imag);
 
-	}
+    }
 
-	return 0;
+    return 0;
 
 }
 
